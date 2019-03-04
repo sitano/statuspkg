@@ -2,7 +2,7 @@ PKGS := github.com/sitano/statuspkg
 SRCDIRS := $(shell go list -f '{{.Dir}}' $(PKGS))
 GO := go
 
-check: test vet gofmt misspell unconvert staticcheck ineffassign unparam
+check: test vet gofmt unconvert staticcheck ineffassign unparam
 
 test:
 	$(GO) test $(PKGS)

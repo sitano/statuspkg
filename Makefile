@@ -1,42 +1,42 @@
 PKGS := github.com/sitano/statuspkg
 SRCDIRS := $(shell go list -f '{{.Dir}}' $(PKGS))
-GO := env GO111MODULE=on go
+GO := go
 
 check: test vet gofmt unconvert staticcheck ineffassign unparam
 
 test:
-	$(GO) test $(PKGS)
+	env GO111MODULE=on $(GO) test $(PKGS)
 
 vet: | test
 	$(GO) vet $(PKGS)
 
 staticcheck:
-	$(GO) get honnef.co/go/tools/cmd/staticcheck
+	env GO111MODULE=off $(GO) get honnef.co/go/tools/cmd/staticcheck
 	staticcheck -checks all $(PKGS)
 
 misspell:
-	$(GO) get github.com/client9/misspell/cmd/misspell
+	env GO111MODULE=off $(GO) get github.com/client9/misspell/cmd/misspell
 	misspell \
 		-locale GB \
 		-error \
 		*.md *.go
 
 unconvert:
-	$(GO) get github.com/mdempsky/unconvert
+	env GO111MODULE=off $(GO) get github.com/mdempsky/unconvert
 	unconvert -v $(PKGS)
 
 ineffassign:
-	$(GO) get github.com/gordonklaus/ineffassign
+	env GO111MODULE=off $(GO) get github.com/gordonklaus/ineffassign
 	find $(SRCDIRS) -name '*.go' | xargs ineffassign
 
 pedantic: check errcheck
 
 unparam:
-	$(GO) get mvdan.cc/unparam
+	env GO111MODULE=off $(GO) get mvdan.cc/unparam
 	unparam ./...
 
 errcheck:
-	$(GO) get github.com/kisielk/errcheck
+	env GO111MODULE=off $(GO) get github.com/kisielk/errcheck
 	errcheck $(PKGS)
 
 gofmt:

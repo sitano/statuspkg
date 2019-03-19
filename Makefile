@@ -1,6 +1,6 @@
 PKGS := github.com/sitano/statuspkg
 SRCDIRS := $(shell go list -f '{{.Dir}}' $(PKGS))
-GO := go
+GO := env GO111MODULE=on go
 
 check: test vet gofmt unconvert staticcheck ineffassign unparam
 

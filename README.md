@@ -31,6 +31,82 @@ It also provides implementation of all gRPC status package
 methods which now supports cause chains of errors and context
 errors by default.
 
+## Wrapping with status
+
+```go
+cause := something from spanner
+wrap := errors.Wrap(cause, "operation xyz")
+return WithStatus(err, spanner.Code(cause), cause.Error())
+```
+
+## Status extractor
+
+Implementation of the status related functions in this package
+is able to extract GRPC status from any node of the cause chain:
+
+```go
+cause := something from spanner
+wrap := errors.Wrap(cause, "operation xyz")
+return WithStatus(wrap, spanner.Code(cause), cause.Error())
+```
+
+or
+
+```go
+cause := something from spanner
+wrap := WithStatus(err, spanner.Code(cause), cause.Error())
+return errors.Wrap(wrap, "operation xyz")
+```
+
+in both cases `Convert / FromError` will return status from
+WithStatus wrap.
+
+## How to develop custom wrappers
+
+You can write different wrappers extending standard error context
+and provide interface to it with functions that support searching over
+a cause chain.
+
+Implement `causer` interface as its made for WithStatus wrapper
+and provide static helpers for checking state of wrapped errors.
+`Cause` method just returns the next element in the cause chain.
+
+```go
+type causer interface {
+        Cause() error
+}
+```
+
+In example retryable errors or errors with hidden meta context
+may be implement easily with the help of cause chains implemented
+in this package.
+
+## Search through the cause chain
+
+```go
+Search(err, func(t error) bool {
+	if t == context.DeadlineExceeded {
+		c = codes.DeadlineExceeded
+		return true
+	} else if t == context.Canceled {
+		c = codes.Canceled
+		return true
+	} else if r, k := t.(statuser); k {
+		c = r.GRPCStatus().Code()
+		return true
+	}
+	return false
+})
+```
+
+## Scan through every element in the cause chain
+
+```go
+Scan(err, func(t error) {
+	count ++
+})
+```
+
 ## License
 
 BSD-2-Clause

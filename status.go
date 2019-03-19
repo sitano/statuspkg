@@ -29,7 +29,6 @@ import (
 	"context"
 	"fmt"
 
-	spb "google.golang.org/genproto/googleapis/rpc/status"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -56,16 +55,6 @@ func Error(c codes.Code, msg string) error {
 // Errorf returns Error(c, fmt.Sprintf(format, a...)).
 func Errorf(c codes.Code, format string, a ...interface{}) error {
 	return Error(c, fmt.Sprintf(format, a...))
-}
-
-// ErrorProto returns an error representing s.  If s.Code is OK, returns nil.
-func ErrorProto(s *spb.Status) error {
-	return FromProto(s).Err()
-}
-
-// FromProto returns a Status representing s.
-func FromProto(s *spb.Status) *status.Status {
-	return status.FromProto(s)
 }
 
 // FromError returns a Status representing err if it was produced from this

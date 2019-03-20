@@ -64,3 +64,22 @@ func Search(err error, f func(error) bool) error {
 
 	return nil
 }
+
+// Cause returns the underlying cause of the error, if possible.
+// An error value has a cause if it implements the following
+// interface:
+//
+//     type causer interface {
+//            Cause() error
+//     }
+//
+// If the error does not implement Cause, the original error will
+// be returned. If the error is nil, nil will be returned without further
+// investigation.
+func Cause(err error) error {
+	var last error
+	Scan(err, func(t error) {
+		last = t
+	})
+	return last
+}

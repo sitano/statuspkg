@@ -10,6 +10,8 @@ chain and have fully compatible API.
 
 `go get github.com/sitano/statuspkg`
 
+## Multi layers architecture support
+
 The package allows wrapping gRPC status responses, overrides
 and developing of the smart wrappers.
 
@@ -31,7 +33,30 @@ It also provides implementation of all gRPC status package
 methods which now supports cause chains of errors and context
 errors by default.
 
-## Wrapping with status
+## gRPC code supports wrapped errors
+
+`Code`, `Convert`, `FromError` nativelly supports cause
+chains and are able to extract gRPC status objects from the
+inside of the cause chain:
+
+```go
+cause := status.Error(codes.IllegalArgument, "blah")
+err := errors.Wrap(cause, "ouch")
+```
+
+`Code(err) == codes.IllegalArgument` is what for this library
+was created.
+
+## Wrapping with gRPC status
+
+Any error can be assigned a status which is compatible with
+gRPC:
+
+```go
+return WithStatus(err, codes.FailedPrecondition, "failed precondition")
+```
+
+or
 
 ```go
 cause := something from spanner
@@ -39,7 +64,7 @@ wrap := errors.Wrap(cause, "operation xyz")
 return WithStatus(err, spanner.Code(cause), cause.Error())
 ```
 
-## Status extractor
+## gRPC status from a cause chain
 
 Implementation of the status related functions in this package
 is able to extract GRPC status from any node of the cause chain:
@@ -58,8 +83,31 @@ wrap := WithStatus(err, spanner.Code(cause), cause.Error())
 return errors.Wrap(wrap, "operation xyz")
 ```
 
-in both cases `Convert / FromError` will return status from
-WithStatus wrap.
+in both cases `Code / Convert / FromError` will return the right
+status.
+
+## gRPC status override
+
+`WithStatus` can override original gRPC status error:
+
+```go
+cause := status.Error(codes.IllegalArgument, "blah")
+return WithStatus(cause, codes.Unknown, "whoa")
+```
+
+`status.Code` will return `codes.Unknown` for this error.
+
+Thus it makes it possible to wrap gRPC statuses and then change
+them:
+
+```go
+cause := status.Error(codes.IllegalArgument, "blah")
+wrap := errors.Wrap(cause, "something went wrong here")
+return WithStatus(wrap, codes.Unknown, "whoa")
+```
+
+`status.Code` will return `codes.Unknown` for this error,
+and the `errors.Cause` will return original status.
 
 ## How to develop custom wrappers
 
@@ -73,7 +121,7 @@ and provide static helpers for checking state of wrapped errors.
 
 ```go
 type causer interface {
-        Cause() error
+    Cause() error
 }
 ```
 

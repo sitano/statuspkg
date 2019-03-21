@@ -18,8 +18,9 @@ func TestScan(t *testing.T) {
 	})
 
 	t.Run("simple", func(t *testing.T) {
-		err := errors.New("e")
-		i := 0
+		var i = 0
+		var err = errors.New("e")
+
 		Scan(err, func(e error) {
 			if e != err {
 				t.Error("unexpected error")
@@ -33,11 +34,13 @@ func TestScan(t *testing.T) {
 	})
 
 	t.Run("chained", func(t *testing.T) {
-		cause := errors.New("e")
+		var cause = errors.New("e")
 		var wrap error = &caused{cause}
 		var err error = &caused{wrap}
-		list := []error{err, wrap, cause}
-		i := 0
+
+		var i = 0
+		var list = []error{err, wrap, cause}
+
 		Scan(err, func(e error) {
 			if e != list[i] {
 				t.Error("unexpected error")
@@ -53,11 +56,13 @@ func TestScan(t *testing.T) {
 
 func TestSearch(t *testing.T) {
 	t.Run("nil", func(t *testing.T) {
-		Search(nil, nil)
+		if Search(nil, nil) != nil {
+			t.Error("search over nil must do nothing")
+		}
 	})
 
 	t.Run("simple", func(t *testing.T) {
-		err := errors.New("e")
+		var err = errors.New("e")
 		if x := Search(err, func(e error) bool {
 			return e == err
 		}); x != err {
@@ -66,10 +71,10 @@ func TestSearch(t *testing.T) {
 	})
 
 	t.Run("chained", func(t *testing.T) {
-		cause := errors.New("e")
+		var cause = errors.New("e")
 		var wrap error = &caused{cause}
 		var err error = &caused{wrap}
-		list := []error{err, wrap, cause}
+		var list = []error{err, wrap, cause}
 		for _, x := range list {
 			if y := Search(err, func(e error) bool {
 				return e == x

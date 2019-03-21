@@ -64,7 +64,7 @@ func FromError(err error) (s *status.Status, ok bool) {
 	if err == nil {
 		return status.FromError(nil)
 	}
-	Search(err, func(t error) bool {
+	_ = Search(err, func(t error) bool {
 		if t == context.DeadlineExceeded {
 			s = New(codes.DeadlineExceeded, t.Error())
 			ok = true
@@ -99,7 +99,7 @@ func Code(err error) codes.Code {
 		return codes.OK
 	}
 	var c = codes.Unknown
-	Search(err, func(t error) bool {
+	_ = Search(err, func(t error) bool {
 		if t == context.DeadlineExceeded {
 			c = codes.DeadlineExceeded
 			return true

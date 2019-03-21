@@ -14,6 +14,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
+ * Modifications:
+ * - 2019 @john.koepi/@sitano deleted tests for details and that have
+ *   external dependencies.
+ *
  */
 
 package statuspkg

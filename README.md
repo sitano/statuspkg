@@ -10,81 +10,57 @@ chain and have fully compatible API.
 
 `go get github.com/sitano/statuspkg`
 
-## Multi layers architecture support
+## Wrap gRPC errors
 
-The package allows wrapping gRPC status responses, overrides
-and developing of the smart wrappers.
-
-    Business logic:
-        err = errors.Wrap(err, "something bad happen")
-        ...
-        return statuspkg.WithStatus(err, codes.Internal, "not succeed")
-
-    gRPC server handler:
-        if statuspkg.Code(err) == codes.Internal {
-            // do something about it
-        }
-
-    gRPC server interceptor:
-        log.Info(err)
-        return statuspkg.Convert(err)
-
-It also provides implementation of all gRPC status package
-methods which now supports cause chains of errors and context
-errors by default.
-
-## gRPC code supports wrapped errors
-
-`Code`, `Convert`, `FromError` nativelly supports cause
+`Code`, `Convert`, `FromError` natively supports cause
 chains and are able to extract gRPC status objects from the
 inside of the cause chain:
 
 ```go
 cause := status.Error(codes.IllegalArgument, "blah")
 err := errors.Wrap(cause, "ouch")
+
+if statuspkg.Code(err) == codes.IllegalArgument {}
 ```
 
-`Code(err) == codes.IllegalArgument` is what for this library
-was created.
+`Code(err) == codes.IllegalArgument` is what this library
+was created for.
 
-## Wrapping with gRPC status
+## Wrap errors with gRPC status
 
-Any error can be assigned a status which is compatible with
-gRPC:
+Any error can be assigned a gRPC status:
 
 ```go
 return WithStatus(err, codes.FailedPrecondition, "failed precondition")
-```
 
-or
+// or
 
-```go
 cause := something from spanner
 wrap := errors.Wrap(cause, "operation xyz")
 return WithStatus(err, spanner.Code(cause), cause.Error())
 ```
 
-## gRPC status from a cause chain
+## Extract code from error
 
-Implementation of the status related functions in this package
-is able to extract GRPC status from any node of the cause chain:
+Implementation of all status related functions in this package
+is able to extract gRPC status from any node of the cause chain:
 
 ```go
 cause := something from spanner
 wrap := errors.Wrap(cause, "operation xyz")
 return WithStatus(wrap, spanner.Code(cause), cause.Error())
-```
 
-or
+// or 
 
-```go
 cause := something from spanner
 wrap := WithStatus(err, spanner.Code(cause), cause.Error())
 return errors.Wrap(wrap, "operation xyz")
+
+// there is no difference for Code(), Convert(), FromError()
 ```
 
-in both cases `Code / Convert / FromError` will return the right
-status.
+in both cases `Code, Convert, FromError` will return the right
+status which comes from the WithStatus node.
 
 ## gRPC status override
 
@@ -108,6 +84,29 @@ return WithStatus(wrap, codes.Unknown, "whoa")
 
 `status.Code` will return `codes.Unknown` for this error,
 and the `errors.Cause` will return original status.
+
+## Multi layers architecture support
+
+The package allows wrapping gRPC status responses, overrides
+and developing of the smart wrappers.
+
+    Business logic:
+        err = errors.Wrap(err, "something bad happen")
+        ...
+        return statuspkg.WithStatus(err, codes.Internal, "not succeed")
+
+    gRPC server handler:
+        if statuspkg.Code(err) == codes.Internal {
+            // do something about it
+        }
+
+    gRPC server interceptor:
+        log.Info(err)
+        return statuspkg.Convert(err)
+
+It also provides implementation of all gRPC status package
+methods which now supports cause chains of errors and context
+errors by default.
 
 ## How to develop custom wrappers
 
